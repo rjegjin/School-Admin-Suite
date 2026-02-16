@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 과학과 시수 배정 시스템</title>
+    <!-- 라이브러리 로드 -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; overflow-x: hidden; }
+        .font-serif { font-family: 'Batang', 'Gungsuh', serif; }
+        .font-mono { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="root"></div>
+
+    <script type="text/babel" src="App.js"></script>
+    
+    <script type="text/babel">
+        // App.js가 로드된 후 실행 (App 컴포넌트가 전역 스코프에 있다고 가정)
+        // Babel Standalone은 외부 스크립트를 로드할 때 비동기로 처리될 수 있음
+        // 따라서 App.js 내부에서 ReactDOM.createRoot를 호출하거나, 
+        // 여기서 호출하되 타이밍을 맞춰야 함.
+        // 가장 안전한 방법은 App.js의 마지막에 렌더링 코드를 포함하는 것인데,
+        // 여기서는 App.js를 '라이브러리'처럼 쓰고 여기서 렌더링하도록 수정하겠습니다.
+        
+        // 하지만 src="App.js"로 로드된 스크립트 내의 변수는 Babel 변환 시 로컬 스코프에 갇힐 수 있음.
+        // 따라서 App.js 마지막 줄에 'window.App = App;' 또는 직접 렌더링 코드를 넣는 것이 좋음.
+        
+        // 이 파일(index.html)에서는 그냥 App.js를 로드하고, 렌더링은 App.js나 별도 스크립트에서 수행하도록 구조를 잡아야 함.
+        // 편의상 App.js 내부에 렌더링 코드를 추가하는 방식으로 가겠습니다.
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+﻿폴더 PATH의 목록입니다.
+볼륨 일련 번호는 545A-7D21입니다.
+C:\USERS\RJEGJ\ONEDRIVE\PROJECTS\3-3 HIGHLIGHT
+    1.jpg
+    2.jpg
+    3-3 Highlight_structure.txt
+    3.jpg
+    4.jpg
+    5.jpg
+    6-1.jpg
+    6.jpg
+    6.png
+    7-1.jpg
+    7.jpg
+    KakaoTalk_20251201_124536213_04.jpg
+    KakaoTalk_20251201_124536213_06.jpg
+    KakaoTalk_20251201_124536213_07.jpg
+    KakaoTalk_20251201_124536213_08.jpg
+    KakaoTalk_20251201_124536213_10.jpg
+    KakaoTalk_20251201_124536213_12.jpg
+    KakaoTalk_20251201_124536213_14.jpg
+    KakaoTalk_20251201_124536213_15.jpg
+    KakaoTalk_20251201_124536213_18.jpg
+    KakaoTalk_20251201_124536213_19.jpg
+    main.html
+    main2.html
+    main3.html
+    
+
+에 하위 폴더가 없습니다.

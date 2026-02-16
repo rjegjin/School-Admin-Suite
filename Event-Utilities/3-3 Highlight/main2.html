@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈티지 콜라주 (업로드 + 팝업 통합)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+    /* --- [기본 스타일 유지] --- */
+    body {
+        background-color: #e8e4d9;
+        display: flex; justify-content: center; align-items: center;
+        min-height: 100vh; margin: 0; padding: 20px;
+        font-family: 'Nanum Pen Script', cursive;
+    }
+    .collage-container {
+        position: relative; width: 1200px; height: 800px;
+        background-color: #f4f1e8;
+        background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        border-radius: 4px; overflow: hidden; border: 1px solid #d4cfb8;
+    }
+
+    /* --- [프레임 스타일] --- */
+    .photo-frame {
+        position: absolute; background-color: #fff;
+        padding: 10px 10px 40px 10px;
+        box-shadow: 2px 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 1px solid #e0e0e0; cursor: pointer; z-index: 1;
+    }
+    .photo-frame:hover {
+        transform: scale(1.05) rotate(0deg) !important;
+        z-index: 100 !important;
+        box-shadow: 10px 20px 30px rgba(0,0,0,0.4);
+    }
+    .photo-content {
+        width: 100%; height: 100%; display: block;
+        background-color: #ddd; border: 1px solid #eee;
+        object-fit: cover; image-rendering: auto;
+    }
+    .placeholder-text {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -60%);
+        color: #777; font-size: 20px; pointer-events: none;
+        text-align: center; width: 100%;
+    }
+
+    /* --- [장식 요소] --- */
+    .tape {
+        position: absolute; width: 80px; height: 25px;
+        background-color: rgba(235, 225, 160, 0.6);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        pointer-events: none; z-index: 10;
+    }
+    .handwritten-text { position: absolute; font-size: 32px; color: #444; z-index: 5; pointer-events: none; }
+    
+    /* 프레임 위치 */
+    .frame-1 { top: 60px; left: 50px; width: 300px; height: 200px; transform: rotate(-4deg); }
+    .frame-2 { top: 420px; left: 70px; width: 220px; height: 280px; transform: rotate(2deg); }
+    .frame-3 { top: 160px; left: 380px; width: 440px; height: 280px; transform: rotate(0deg); z-index: 2; padding-bottom: 50px; }
+    .frame-4 { top: 40px; right: 60px; width: 260px; height: 340px; transform: rotate(3deg); }
+    .frame-5 { bottom: 40px; left: 330px; width: 280px; height: 180px; transform: rotate(-2deg); }
+    .frame-6 { top: 380px; right: 300px; width: 220px; height: 220px; transform: rotate(5deg); }
+    .frame-7 { bottom: 40px; right: 50px; width: 300px; height: 190px; transform: rotate(-3deg); }
+    
+    .tape-1 { top: -12px; left: 30%; transform: rotate(-2deg); }
+    .tape-2 { top: -10px; right: -20px; transform: rotate(25deg); }
+    .tape-corner { bottom: -10px; right: 0px; transform: rotate(-45deg); width: 50px; }
+
+    /* ========================================= */
+    /* [통합] 팝업창(Modal) 스타일 */
+    /* ========================================= */
+    .modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.85);
+        backdrop-filter: blur(5px);
+        justify-content: center; align-items: center; flex-direction: column;
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .modal.show { display: flex; opacity: 1; }
+    
+    .modal-content {
+        max-width: 85%; max-height: 80vh;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        border: 10px solid #fff; border-radius: 4px;
+        animation: zoomIn 0.3s;
+    }
+    
+    /* 팝업 내 버튼 그룹 */
+    .modal-buttons {
+        margin-top: 20px;
+        display: flex; gap: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px; font-family: 'Nanum Pen Script', cursive;
+        font-size: 24px; cursor: pointer; border: none; border-radius: 5px;
+        transition: 0.2s;
+    }
+    .btn-close { background-color: #ddd; color: #333; }
+    .btn-change { background-color: #ffcc00; color: #333; font-weight: bold; }
+    .btn:hover { transform: scale(1.1); }
+
+    @keyframes zoomIn { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+
+</style>
+</head>
+<body>
+
+<div class="collage-container">
+    <div class="handwritten-text" style="top: 40px; left: 50%; transform: translateX(-50%); font-size: 40px;">Beautiful Moments</div>
+    <div class="handwritten-text" style="bottom: 30px; left: 50px; transform: rotate(-5deg);">함께했던 시간들</div>
+    <div class="handwritten-text" style="top: 100px; right: 380px; transform: rotate(10deg);">Our Memory</div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+    <div class="photo-frame frame-1" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">클릭해서<br>사진 추가</div>
+        <div class="tape tape-1"></div>
+    </div>
+
+    <div class="photo-frame frame-2" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click<br>Here</div>
+        <div class="tape tape-2"></div>
+    </div>
+
+    <div class="photo-frame frame-3" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">메인 사진<br>(클릭)</div>
+        <div style="position: absolute; bottom: 15px; width: 100%; text-align: center; color: #555;">단체 사진</div>
+        <div class="tape tape-1" style="left: 10%;"></div>
+        <div class="tape tape-2" style="right: 10%; transform: rotate(-25deg);"></div>
+    </div>
+
+    <div class="photo-frame frame-4" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">사진 추가</div>
+        <div class="tape tape-1"></div>
+    </div>
+
+    <div class="photo-frame frame-5" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-corner"></div>
+    </div>
+
+    <div class="photo-frame frame-6" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-2"></div>
+    </div>
+
+    <div class="photo-frame frame-7" onclick="handleFrameClick(this)">
+        <img src="" alt="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">사진 추가</div>
+        <div class="tape tape-1"></div>
+    </div>
+</div>
+
+<div id="myModal" class="modal" onclick="closeModal(event)">
+    <img class="modal-content" id="modalImg">
+    <div class="modal-buttons">
+        <button class="btn btn-change" onclick="changeCurrentPhoto()">사진 변경하기</button>
+        <button class="btn btn-close" onclick="forceClose()">닫기</button>
+    </div>
+</div>
+
+<script>
+    let activeFrame = null;       // 현재 선택된(클릭된) 프레임 요소 저장
+    let activeImgElement = null;  // 현재 선택된 프레임 안의 이미지 태그
+    let activeTextElement = null; // 현재 선택된 프레임 안의 텍스트 태그
+
+    const fileInput = document.getElementById('fileInput');
+    const modal = document.getElementById('myModal');
+    const modalImg = document.getElementById('modalImg');
+
+    // 1. 프레임 클릭 시 실행되는 메인 함수 (분기점)
+    function handleFrameClick(frameElement) {
+        // 현재 클릭한 프레임 정보를 전역 변수에 저장 (나중에 쓰기 위해)
+        activeFrame = frameElement;
+        activeImgElement = frameElement.querySelector('.photo-content');
+        activeTextElement = frameElement.querySelector('.placeholder-text');
+
+        // [조건 체크] 이미지가 업로드 되어 있는가?
+        // opacity가 0이면 빈 상태, 1이면 이미지가 있는 상태로 판단
+        if (activeImgElement.style.opacity === '1') {
+            // 이미지가 있으면 -> 팝업 열기
+            openModal(activeImgElement.src);
+        } else {
+            // 이미지가 없으면 -> 업로드 창 열기
+            fileInput.click();
+        }
+    }
+
+    // 2. 팝업 열기 함수
+    function openModal(src) {
+        modalImg.src = src;
+        modal.classList.add('show');
+    }
+
+    // 3. 팝업 닫기 함수
+    function closeModal(event) {
+        // 배경(modal)을 눌렀을 때만 닫히고, 이미지를 누르면 안 닫힘
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    }
+    
+    // 버튼으로 강제 닫기
+    function forceClose() {
+        modal.classList.remove('show');
+    }
+
+    // 4. [중요] 팝업에서 "사진 변경하기" 눌렀을 때
+    function changeCurrentPhoto() {
+        // 팝업을 닫고
+        modal.classList.remove('show');
+        // 파일 업로드 창을 띄움 (activeFrame 정보는 이미 저장되어 있음)
+        setTimeout(() => {
+             fileInput.click();
+        }, 100); // 팝업 닫히는 애니메이션 고려해서 살짝 딜레이
+    }
+
+    // 5. 파일 선택 완료 시 (업로드 처리)
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        
+        if (file && activeImgElement) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 프레임에 이미지 넣기
+                activeImgElement.src = e.target.result;
+                activeImgElement.style.opacity = '1';
+                
+                // 텍스트("사진 추가") 숨기기
+                if(activeTextElement) {
+                    activeTextElement.style.display = 'none';
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+        // 다음 선택을 위해 초기화
+        fileInput.value = '';
+    });
+</script>
+
+</body>
+</html>

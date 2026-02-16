@@ -1,0 +1,1 @@
+*.csv\n*.xlsx\n*.pdf\n__pycache__/\n.env

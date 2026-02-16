@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>빈티지 콜라주 (10장 버전)</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+    /* --- 기본 스타일 --- */
+    body {
+        background-color: #e8e4d9;
+        display: flex; justify-content: center; align-items: center;
+        min-height: 100vh; margin: 0; padding: 20px;
+        font-family: 'Nanum Pen Script', cursive;
+    }
+
+    .collage-container {
+        position: relative; 
+        width: 1200px; 
+        height: 950px; /* 사진이 많아져서 높이를 좀 더 늘렸습니다 */
+        background-color: #f4f1e8;
+        background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        border-radius: 4px; overflow: hidden; border: 1px solid #d4cfb8;
+    }
+
+    /* --- 프레임 공통 스타일 --- */
+    .photo-frame {
+        position: absolute; background-color: #fff;
+        padding: 10px 10px 35px 10px; /* 폴라로이드 여백 */
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.25);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 1px solid #e0e0e0; cursor: pointer; z-index: 1;
+    }
+    .photo-frame:hover {
+        transform: scale(1.08) rotate(0deg) !important; /* 마우스 올리면 좀 더 커짐 */
+        z-index: 150 !important;
+        box-shadow: 15px 25px 40px rgba(0,0,0,0.4);
+    }
+    .photo-content {
+        width: 100%; height: 100%; display: block;
+        background-color: #eee; border: 1px solid #eee;
+        object-fit: cover; image-rendering: auto;
+    }
+    .placeholder-text {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -60%);
+        color: #888; font-size: 18px; pointer-events: none;
+        text-align: center; width: 100%; line-height: 1.2;
+    }
+
+    /* --- 장식 요소 (테이프, 텍스트) --- */
+    .tape {
+        position: absolute; width: 70px; height: 22px;
+        background-color: rgba(235, 220, 150, 0.65);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        pointer-events: none; z-index: 10;
+    }
+    .handwritten-text { position: absolute; font-size: 30px; color: #555; z-index: 5; pointer-events: none; }
+    
+    /* --- [10개 프레임 배치 디자인] --- */
+    /* z-index를 섞어서 겹치는 느낌을 줌 */
+
+    /* 1. 왼쪽 상단 */
+    .frame-1 { top: 40px; left: 40px; width: 220px; height: 160px; transform: rotate(-6deg); z-index: 2; }
+    /* 2. 중앙 상단 (작은 세로) */
+    .frame-2 { top: 30px; left: 300px; width: 160px; height: 200px; transform: rotate(3deg); z-index: 1; }
+    /* 3. 우측 상단 */
+    .frame-3 { top: 50px; right: 50px; width: 260px; height: 180px; transform: rotate(5deg); z-index: 2; }
+    
+    /* 4. 왼쪽 중간 (세로) */
+    .frame-4 { top: 250px; left: 60px; width: 180px; height: 240px; transform: rotate(-3deg); z-index: 3; }
+    
+    /* ★ 5. 정중앙 메인 사진 (가장 큼) ★ */
+    .frame-5 { top: 280px; left: 50%; margin-left: -220px; /* 중앙 정렬 trick */ width: 440px; height: 280px; transform: rotate(1deg); z-index: 5; padding-bottom: 50px; }
+    
+    /* 6. 오른쪽 중간 (정사각형) */
+    .frame-6 { top: 280px; right: 80px; width: 200px; height: 200px; transform: rotate(-4deg); z-index: 2; }
+    
+    /* 7. 왼쪽 하단 */
+    .frame-7 { bottom: 60px; left: 50px; width: 260px; height: 180px; transform: rotate(4deg); z-index: 2; }
+    /* 8. 중앙 하단 (세로) */
+    .frame-8 { bottom: 40px; left: 360px; width: 180px; height: 230px; transform: rotate(-2deg); z-index: 4; }
+    /* 9. 오른쪽 하단 (와이드) */
+    .frame-9 { bottom: 50px; right: 60px; width: 280px; height: 170px; transform: rotate(-5deg); z-index: 3; }
+    /* 10. 틈새 채우기 (중앙과 우측 사이) */
+    .frame-10 { top: 520px; right: 280px; width: 190px; height: 150px; transform: rotate(8deg); z-index: 1; }
+
+    /* 테이프 위치 및 각도 */
+    .tape-top { top: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg); }
+    .tape-left { top: 10px; left: -15px; transform: rotate(-45deg); }
+    .tape-right { bottom: 10px; right: -15px; transform: rotate(45deg); }
+    .tape-corner { top: -12px; right: -5px; transform: rotate(30deg); }
+
+    /* --- 모달(팝업) 스타일 --- */
+    .modal {
+        display: none; position: fixed; z-index: 9999;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+        justify-content: center; align-items: center; flex-direction: column;
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .modal.show { display: flex; opacity: 1; }
+    .modal-content {
+        max-width: 85%; max-height: 80vh;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        border: 10px solid #fff; border-radius: 4px;
+        animation: zoomIn 0.3s;
+    }
+    .modal-buttons { margin-top: 20px; display: flex; gap: 15px; }
+    .btn {
+        padding: 10px 20px; font-family: 'Nanum Pen Script', cursive;
+        font-size: 24px; cursor: pointer; border: none; border-radius: 5px; transition: 0.2s;
+    }
+    .btn-close { background-color: #ddd; color: #333; }
+    .btn-change { background-color: #ffcc00; color: #333; font-weight: bold; }
+    .btn:hover { transform: scale(1.1); }
+    @keyframes zoomIn { from {transform: scale(0.8); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+
+</style>
+</head>
+<body>
+
+<div class="collage-container">
+    <div class="handwritten-text" style="top: 20px; left: 50%; transform: translateX(-50%); font-size: 42px; color: #333;">My Precious Moments</div>
+    <div class="handwritten-text" style="top: 150px; left: 550px; transform: rotate(15deg); font-size: 24px;">♥</div>
+    <div class="handwritten-text" style="bottom: 30px; left: 100px; transform: rotate(-5deg);">잊지 못할 추억들</div>
+    <div class="handwritten-text" style="bottom: 120px; right: 80px; transform: rotate(-10deg); font-size: 28px;">Forever</div>
+    <div class="handwritten-text" style="top: 200px; right: 100px;">Jeju Island</div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+    <div class="photo-frame frame-1" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click<br>Add Photo</div>
+        <div class="tape tape-top"></div>
+    </div>
+
+    <div class="photo-frame frame-2" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-corner"></div>
+    </div>
+
+    <div class="photo-frame frame-3" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">사진 추가</div>
+        <div class="tape tape-left"></div>
+    </div>
+
+    <div class="photo-frame frame-4" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-right"></div>
+    </div>
+
+    <div class="photo-frame frame-5" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Main Photo<br>(Click)</div>
+        <div style="position: absolute; bottom: 10px; width: 100%; text-align: center; color: #555; font-size: 24px;">우리들의 시간</div>
+        <div class="tape tape-left" style="top: -15px; left: 20%;"></div>
+        <div class="tape tape-right" style="top: -15px; right: 20%; transform: rotate(-45deg);"></div>
+    </div>
+
+    <div class="photo-frame frame-6" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-top"></div>
+    </div>
+
+    <div class="photo-frame frame-7" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">사진 추가</div>
+        <div class="tape tape-corner" style="left: -10px; transform: rotate(-30deg);"></div>
+    </div>
+
+    <div class="photo-frame frame-8" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-top"></div>
+    </div>
+
+    <div class="photo-frame frame-9" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-left"></div>
+    </div>
+
+    <div class="photo-frame frame-10" onclick="handleFrameClick(this)">
+        <img src="" class="photo-content" style="opacity: 0;"> <div class="placeholder-text">Click</div>
+        <div class="tape tape-right"></div>
+    </div>
+
+</div>
+
+<div id="myModal" class="modal" onclick="closeModal(event)">
+    <img class="modal-content" id="modalImg">
+    <div class="modal-buttons">
+        <button class="btn btn-change" onclick="changeCurrentPhoto()">사진 변경하기</button>
+        <button class="btn btn-close" onclick="forceClose()">닫기</button>
+    </div>
+</div>
+
+<script>
+    let activeFrame = null;
+    let activeImgElement = null;
+    let activeTextElement = null;
+
+    const fileInput = document.getElementById('fileInput');
+    const modal = document.getElementById('myModal');
+    const modalImg = document.getElementById('modalImg');
+
+    function handleFrameClick(frameElement) {
+        activeFrame = frameElement;
+        activeImgElement = frameElement.querySelector('.photo-content');
+        activeTextElement = frameElement.querySelector('.placeholder-text');
+
+        if (activeImgElement.style.opacity === '1') {
+            openModal(activeImgElement.src);
+        } else {
+            fileInput.click();
+        }
+    }
+
+    function openModal(src) {
+        modalImg.src = src;
+        modal.classList.add('show');
+    }
+
+    function closeModal(event) {
+        if (event.target === modal) {
+            modal.classList.remove('show');
+        }
+    }
+    
+    function forceClose() {
+        modal.classList.remove('show');
+    }
+
+    function changeCurrentPhoto() {
+        modal.classList.remove('show');
+        setTimeout(() => { fileInput.click(); }, 100);
+    }
+
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file && activeImgElement) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                activeImgElement.src = e.target.result;
+                activeImgElement.style.opacity = '1';
+                if(activeTextElement) activeTextElement.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        }
+        fileInput.value = '';
+    });
+</script>
+
+</body>
+</html>

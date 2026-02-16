@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3학년 행운권 추첨 (Pro)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'GmarketSansBold', 'Malgun Gothic', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* 설정 및 입력 UI */
+        #setupDiv {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 10;
+            width: 80%;
+            max-width: 600px;
+            backdrop-filter: blur(10px);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        .file-upload-box {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px dashed #00e5ff;
+            border-radius: 5px;
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        /* 추첨 메인 화면 */
+        #drawDiv {
+            display: none;
+            text-align: center;
+            z-index: 10;
+            width: 100%;
+            max-width: 900px;
+            position: relative;
+        }
+
+        /* 뒤로 가기 버튼 (우측 상단) */
+        .btn-back {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            font-size: 0.9rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: none;
+        }
+
+        .btn-back:hover {
+            background: #333;
+            color: white;
+            border-color: white;
+        }
+
+        .slot-machine {
+            background: #000;
+            border: 4px solid #00e5ff;
+            border-radius: 20px;
+            box-shadow: 0 0 20px #00e5ff;
+            padding: 20px;
+            margin: 0 auto 20px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        #displayBox {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #fff;
+            line-height: 1.2;
+            word-break: keep-all;
+        }
+
+        /* 컨트롤 패널 */
+        .control-panel {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            padding: 10px;
+            font-size: 1.2rem;
+            width: 60px;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+            font-weight: bold;
+        }
+
+        .main-btn {
+            background: linear-gradient(45deg, #ff00de, #00e5ff);
+            border: none;
+            padding: 10px 30px;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+        }
+
+        .main-btn:active {
+            transform: scale(0.95);
+        }
+
+        .main-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        /* 결과 기록 */
+        .history {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            width: 100%;
+        }
+
+        .winner-badge {
+            display: inline-block;
+            background: rgba(0, 229, 255, 0.2);
+            border: 1px solid #00e5ff;
+            padding: 5px 15px;
+            margin: 4px;
+            border-radius: 15px;
+            font-size: 1rem;
+            color: #00e5ff;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            80% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 새로운 당첨자 그리드 스타일 */
+        .winner-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .winner-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00e5ff;
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            animation: cardPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        @keyframes cardPop {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 체크박스 스타일 */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-wrapper input {
+            width: 18px;
+            height: 18px;
+            accent-color: #00e5ff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <canvas id="confetti-canvas"></canvas> 기존 캔버스 제거 -->
+
+    <div id="setupDiv">
+        <h2 style="margin-top:0;">📋 학생 명단 설정</h2>
+        <p style="color:#aaa; font-size:0.9rem;">기본값: 3학년 전체 명단 (413명)</p>
+        <textarea id="studentInput" placeholder="명단 로딩 중..."></textarea>
+        <div class="file-upload-box">
+            <span>📂 명단 파일(CSV) 변경: </span>
+            <input type="file" id="csvFileInput" accept=".csv" style="color:white;">
+        </div>
+        <button class="main-btn" onclick="goToDrawPage()">🚀 추첨 화면으로 이동</button>
+    </div>
+
+    <div id="drawDiv">
+        <button class="btn-back" onclick="goToSetupPage()">⚙️ 명단 설정으로</button>
+
+        <h1 style="margin: 10px 0;">🏆 행운권 추첨 🏆</h1>
+
+        <div class="slot-machine">
+            <div id="displayBox">READY</div>
+        </div>
+
+        <div class="control-panel">
+            <span style="font-size:1.2rem;">인원: </span>
+            <input type="number" id="drawCount" value="1" min="1" max="50">
+
+            <label class="checkbox-wrapper">
+                <input type="checkbox" id="autoStopCheck">
+                <span>자동멈춤(3초)</span>
+            </label>
+
+            <button id="drawBtn" class="main-btn" onclick="runBatchDraw()">뽑기! ✨</button>
+        </div>
+
+        <div class="history">
+            <div>남은 학생: <span id="remainCount" style="color:#ff00de; font-weight:bold;">0</span>명</div>
+            <div id="winnerList" style="margin-top:10px; max-height: 250px; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <script>
+        // [기본 데이터] 업로드해주신 3학년 전체 명단 (413명)
+        // [기본 데이터]는 스크립트 맨 아래로 이동했습니다.
+
+        // 1. 초기화
+        window.onload = function () {
+            document.getElementById('studentInput').value = defaultData;
+        };
+
+        let students = [];
+        let isRolling = false;
+        let rollTimer;
+
+        // 2. 화면 전환 함수
+        function goToDrawPage() {
+            const input = document.getElementById('studentInput').value.trim();
+            if (!input) return alert("명단을 확인해주세요!");
+
+            // 데이터 로딩
+            students = input.split('\n').map(s => s.trim()).filter(s => s !== "");
+            if (students.length === 0) return alert("명단이 없습니다.");
+
+            // 화면 전환
+            document.getElementById('setupDiv').style.display = 'none';
+            document.getElementById('drawDiv').style.display = 'block';
+            updateStatus();
+        }
+
+        function goToSetupPage() {
+            if (confirm("설정 화면으로 돌아가시겠습니까? \n(주의: 현재 남은 학생 목록이 초기화될 수 있습니다.)")) {
+                document.getElementById('drawDiv').style.display = 'none';
+                document.getElementById('setupDiv').style.display = 'block';
+            }
+        }
+
+        // 3. CSV 파일 읽기 로직 (간편 모드)
+        document.getElementById('csvFileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.readAsText(file, 'UTF-8');
+            reader.onload = function (e) {
+                const lines = e.target.result.split('\n');
+                let parsedText = "";
+                let count = 0;
+                lines.forEach(line => {
+                    const p = line.split(',');
+                    // CSV 파싱 규칙: 최소 2칸 이상이어야 함
+                    if (p.length >= 2) {
+                        const num = p[0].trim();
+                        const name = p[1].trim();
+                        // 헤더(학번, 이름)가 아니고 빈값이 아니면 추가
+                        if (num && name && num !== "학번" && num !== "이름") {
+                            parsedText += `${num} ${name}\n`;
+                            count++;
+                        }
+                    }
+                });
+                document.getElementById('studentInput').value = parsedText;
+                alert(`${count}명의 명단이 로드되었습니다.`);
+            }
+        });
+
+        // 4. 추첨 로직
+        function runBatchDraw() {
+            const countInput = document.getElementById('drawCount');
+            const count = parseInt(countInput.value);
+            const display = document.getElementById('displayBox');
+            const btn = document.getElementById('drawBtn');
+            const isAutoStop = document.getElementById('autoStopCheck').checked;
+
+            if (students.length === 0) {
+                display.innerText = "추첨 종료";
+                return alert("모든 학생을 다 뽑았습니다!");
+            }
+            if (count > students.length) {
+                return alert(`남은 학생이 ${students.length}명뿐입니다. 숫자를 줄여주세요.`);
+            }
+
+            if (!isRolling) {
+                // [시작]
+                isRolling = true;
+                btn.innerText = "멈춰! ✋";
+                btn.style.background = "linear-gradient(45deg, #ff4b1f, #ff9068)";
+
+                // 롤링 애니메이션
+                rollTimer = setInterval(() => {
+                    const rIdx = Math.floor(Math.random() * students.length);
+                    // 롤링 중에는 텍스트로만 간단히 표시
+                    display.innerText = students[rIdx] + (count > 1 ? ` 외 ${count - 1}명` : "");
+                    display.style.fontSize = "3.5rem";
+                    display.innerHTML = students[rIdx] + (count > 1 ? `<span style="font-size:1.5rem; display:block; margin-top:10px;">(외 ${count - 1}명 추첨 중...)</span>` : "");
+                }, 50);
+
+                // 자동 멈춤 기능
+                if (isAutoStop) {
+                    setTimeout(() => {
+                        if (isRolling) stopDraw();
+                    }, 3000); // 3초 후 멈춤
+                }
+
+            } else {
+                // [수동 멈춤]
+                stopDraw();
+            }
+        }
+
+        function stopDraw() {
+            clearInterval(rollTimer);
+            isRolling = false;
+
+            const countInput = document.getElementById('drawCount');
+            const count = parseInt(countInput.value);
+            const display = document.getElementById('displayBox');
+            const btn = document.getElementById('drawBtn');
+
+            let currentWinners = [];
+            for (let i = 0; i < count; i++) {
+                const rIdx = Math.floor(Math.random() * students.length);
+                currentWinners.push(students[rIdx]);
+                students.splice(rIdx, 1);
+            }
+
+            // 결과 표시 (Grid vs Single)
+            if (count === 1) {
+                display.innerText = currentWinners[0];
+                display.style.fontSize = "3.5rem";
+            } else {
+                // Grid 형태로 표시
+                display.innerHTML = `<div class="winner-grid">
+                ${currentWinners.map((name, i) =>
+                    `<div class="winner-card" style="animation-delay:${i * 0.1}s">${name}</div>`
+                ).join('')}
+            </div>`;
+            }
+
+            display.style.color = "#ffff00";
+            btn.innerText = "뽑기! ✨";
+            btn.style.background = "linear-gradient(45deg, #ff00de, #00e5ff)";
+
+            // 하단 기록에 추가
+            // 역순으로 추가하여 최신이 위로 오게 함
+            [...currentWinners].reverse().forEach(name => {
+                const badge = document.createElement('span');
+                badge.className = 'winner-badge';
+                badge.innerText = name;
+                document.getElementById('winnerList').prepend(badge);
+            });
+
+            updateStatus();
+            fireConfetti();
+        }
+
+        function updateStatus() {
+            document.getElementById('remainCount').innerText = students.length;
+        }
+
+        // 5. 꽃가루 효과 (Canvas Confetti 라이브러리 사용)
+        function fireConfetti() {
+            const duration = 3000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999 };
+
+            const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+            const interval = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+                // 아네모네/폭죽 효과
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        // [기본 데이터] (413명)
+        const defaultData = `30101 강동현\n30102 김예람\n30103 김예지\n30104 김유민\n30105 김유현\n30106 김준수\n30107 김준희\n30108 김지원\n30109 남서준\n30110 박승주\n30111 박준서\n30112 박지윤\n30113 박찬이\n30114 손호영\n30115 심승민\n30116 안산\n30117 안세령\n30118 안제린\n30119 양준서\n30120 어예성\n30121 오현우\n30122 유채현\n30123 이다온\n30124 이세은\n30125 이시윤\n30126 이연우\n30127 이홍윤\n30128 임정헌\n30129 장현민\n30130 최하은\n30201 강연재\n30202 권재연\n30203 김규민\n30205 김설아\n30206 김아리\n30207 김준엽\n30208 김태경\n30209 김태영\n30210 김태현\n30211 라윤성\n30212 문수정\n30213 박종욱\n30214 박준수\n30215 박준혁\n30216 서민성\n30217 성민정\n30218 신아인\n30219 예상혁\n30220 오윤성\n30221 윤아영\n30222 이기석\n30223 이세란\n30224 이율이\n30225 이은교\n30226 이치헌\n30227 장재혁\n30228 정영훈\n30229 정채윤\n30230 정현수\n30301 김나현\n30302 김민재\n30303 김승원\n30304 김아율\n30305 김지윤\n30306 김채연\n30307 문도영\n30308 박건우\n30309 박영민\n30310 박은빈\n30311 박정익\n30312 배유원\n30313 송인유\n30314 심민겸\n30315 우혜준\n30316 이라엘\n30317 이예닮\n30318 이재준\n30319 이준우\n30320 이지훈\n30321 이초명\n30322 이태희\n30323 이해승\n30324 임효림\n30325 장연우\n30326 전호윤\n30327 정주현\n30328 홍서준\n30329 정예원\n30401 곽성준\n30402 구정연\n30403 김나현\n30404 김민재\n30405 김민준\n30406 김서율\n30407 김승현\n30408 김시윤\n30409 김태린\n30410 나윤후\n30411 남현지\n30412 박현규\n30413 서진우\n30414 소윤진\n30415 송주원\n30416 신소민\n30417 유현준\n30418 이서윤\n30419 이연걸\n30420 이정준\n30421 이정현\n30422 이종찬\n30423 임유성\n30424 정재원\n30425 조성렬\n30426 조준혁\n30427 지유나\n30428 최혜승\n30429 허지원\n30501 강승원\n30502 고승범\n30503 김규원\n30504 김동하\n30505 김라온\n30506 김라임\n30507 김선범\n30508 김시윤\n30509 김태건\n30510 노연성\n30511 박수완\n30512 박시현\n30513 변정우\n30514 신지민\n30515 안치현\n30516 양혜리\n30517 이가온\n30518 이서현\n30519 이재헌\n30520 이정진\n30521 장은율\n30522 전민준\n30523 정구열\n30524 정소윤\n30525 조은우\n30526 최주원\n30527 한지원\n30528 홍유하\n30529 황조영\n30601 강호원\n30602 권찬\n30603 김서연\n30604 김선우\n30605 김시우\n30606 박규태\n30607 박송은\n30608 박신형\n30609 변지석\n30610 서민재\n30611 서연우\n30612 송윤근\n30613 송준근\n30614 신민아\n30615 심희윤\n30616 윤예린\n30617 윤재우\n30618 이성연\n30619 이준겸\n30620 이채은\n30621 장여원\n30622 장태영\n30623 정윤송\n30624 정윤아\n30625 정태건\n30626 지선우\n30627 최다은\n30628 최유준\n30629 최이도\n30630 표정훈\n30631 황준혁\n30701 강연주\n30702 고은채\n30703 권민성\n30704 김도훈\n30705 김동우\n30706 김윤서\n30707 김태연\n30708 김해성\n30709 김형철\n30710 류우빈\n30711 송승현\n30712 안유진\n30713 안재민\n30714 오승호\n30715 유채호\n30716 이규진\n30717 이서준\n30718 이은서\n30719 이정윤\n30720 이주한\n30721 이준호\n30722 임윤호\n30723 임지한\n30724 장이삭\n30725 정지원\n30726 조명은\n30727 최부건\n30728 최성훈\n30729 최순빈\n30730 하민지\n30731 고건희\n30801 강승윤\n30802 김나루\n30803 김민서\n30804 김소율\n30805 김유혜\n30806 김지효\n30807 김지후\n30808 김태경\n30809 남유경\n30810 노정연\n30811 문경록\n30812 박윤상\n30813 박윤호\n30814 박지안\n30815 방호정\n30816 손건우\n30817 송수민\n30818 신재원\n30819 엄예빈\n30820 오상민\n30821 유수아\n30822 유하진\n30823 윤준서\n30824 이승준\n30825 임필립\n30826 장서윤\n30827 진한규\n30828 채현욱\n30829 허신\n30830 현서우\n30901 강서진\n30902 강찬휘\n30903 국윤민\n30904 김다은\n30905 김도현\n30906 김시영\n30907 김정현\n30908 김지우\n30909 김태안\n30910 김태은\n30911 김태현\n30912 박서정\n30913 박예빈\n30914 박지유\n30915 박호람\n30916 방준우\n30917 손호영\n30918 오상준\n30919 유혁근\n30920 이도후\n30921 이용랑\n30922 이용랑\n30922 이은채\n30923 장유준\n30924 장진\n30925 전비오\n30926 정연두\n30927 정윤석\n30928 정재민\n30929 최승아\n30930 최재석\n31001 구민준\n31002 권영민\n31003 김나현\n31004 김유안\n31005 김의현\n31006 김종우\n31007 노윤형\n31008 박건하\n31009 박서준\n31010 박세훈\n31011 박지오\n31012 박지호\n31013 박철민\n31014 배이현\n31015 서준혁\n31016 송승아\n31017 송윤성\n31018 안서인\n31019 엄준식\n31020 유예진\n31021 유윤호\n31022 윤도관\n31023 윤서아\n31024 이다현\n31025 이신유\n31026 장현서\n31027 최재율\n31028 최준우\n31029 홍서정\n31030 황도원\n31101 고유정\n31102 김도윤\n31103 김지율\n31104 김지현\n31105 김진서\n31106 박주환\n31107 박현우\n31108 배호하\n31109 서지웅\n31110 손수림\n31111 신승호\n31112 양태양\n31113 윤성준\n31114 이상하\n31115 이예준\n31116 이준서\n31117 이태현\n31118 정민준\n31119 조윤아\n31120 주한별\n31121 차현민\n31122 최건우\n31123 최연우\n31124 한예린\n31125 한예은\n31126 한창희\n31127 허재훈\n31128 홍석준\n31129 안이엘\n31201 강태인\n31202 곽준혁\n31203 국윤석\n31204 김도연\n31205 김서연\n31206 김서원\n31207 노규현\n31208 문형민\n31209 민중규\n31210 박서정\n31211 박소율\n31212 박시우\n31213 박시은\n31214 박정현\n31215 박진웅\n31216 백도연\n31217 성시후\n31218 신윤서\n31219 안현수\n31220 원종빈\n31221 윤예영\n31222 이나윤\n31223 이승환\n31224 이태린\n31225 조동건\n31226 조성우\n31227 한유준\n31228 현승안\n31229 황경원\n31230 황선희\n31301 김나형\n31302 김도연\n31303 김도현\n31304 김서준\n31305 김성수\n31306 김영민\n31307 김예현\n31308 김준우\n31309 김지유\n31310 김태윤\n31311 박재용\n31312 박지민\n31313 박찬이\n31314 신소율\n31315 안재준\n31316 안태이\n31317 양시우\n31318 엄태빈\n31319 유아인\n31320 이강민\n31321 이연서\n31322 이창욱\n31323 이호준\n31324 장유찬\n31325 정승아\n31326 조현우\n31327 주승민\n31328 진미송\n31329 하태윤\n31330 홍수현\n31401 강동연\n31402 강민성\n31403 김나은\n31404 김무진\n31405 김민찬\n31406 김시은\n31407 김예건\n31408 김준엽\n31409 김현성\n31410 김효재\n31411 문찬영\n31412 문혜인\n31413 민준범\n31414 박규빈\n31415 박은서\n31416 박준호\n31417 박지환\n31418 성라현\n31419 양예준\n31420 양정승\n31421 오서준\n31422 이다온\n31423 이예진\n31424 임선우\n31425 장민호\n31426 정도훈\n31427 주신혁\n31428 천유성\n31429 한지우`;
+    </script>
+</body>
+
+</html>
