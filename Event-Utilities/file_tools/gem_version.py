@@ -1,9 +1,21 @@
 import google.generativeai as genai
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-# .env 파일 로드
-load_dotenv()
+# [보안 패치] 중앙 .env 로드 로직
+def load_central_env():
+    current = Path(os.getcwd())
+    while current != current.parent:
+        target = current / '.secrets' / '.env'
+        if target.exists():
+            load_dotenv(target)
+            print(f"🔐 Loaded central .env from {target}")
+            return
+        current = current.parent
+    load_dotenv() # Fallback
+
+load_central_env()
 api_key = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=api_key)
 
