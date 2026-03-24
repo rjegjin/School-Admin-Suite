@@ -11,11 +11,11 @@
 - **Lottery System:** 행사용 행운권 추첨 프로그램.
 - **CSV Tools:** 학급 명렬표 및 데이터 중복 제거 도구.
 
-### 🔬 02. Curriculum-Manager (v1.2)
+### 🔬 02. Curriculum-Manager (v1.3)
 교사의 가장 복잡한 업무 중 하나인 시수 배정을 자동화합니다.
-- **Digital Scan View:** 실제 결재 문서와 동일한 격자 및 레이아웃 출력.
-- **Assignment Engine:** 학년별, 과목별 시수 합계 실시간 검증 및 통계.
-- **Data Persistence:** 배정 현황을 JSON 데이터로 관리 및 백업.
+- **Interactive UI:** 직접 셀을 클릭해 배정을 추가, 수정, 삭제하는 인터랙티브 스캔본 뷰 제공.
+- **Assignment Engine:** 목표 시수와 현재 배정 시수 합계를 실시간 비교/검증하는 통계 대시보드.
+- **Data Persistence:** 브라우저 로컬 스토리지 자동 저장 및 JSON 파일 내보내기/불러오기 지원.
 
 ### 📊 03. Analysis-Toolkit
 데이터 기반의 학교 운영을 지원합니다.

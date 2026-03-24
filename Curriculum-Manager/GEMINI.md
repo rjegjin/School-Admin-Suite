@@ -1,34 +1,17 @@
-# GEMINI.md - Science Hours Allocation System Context
+# 🧬 Curriculum Manager
 
-## 1. Project Overview
-- **Project:** 2026학년도 과학과 시수 배정 시스템 (Science Hours Allocation System)
-- **Goal:** Automate the creation and visualization of teacher schedules for the science department, mimicking the official approval document layout.
-- **Location:** `web_tools/science_hours_system/`
-- **Tech Stack:** React (CDN-based), Tailwind CSS, Lucide Icons. (No build step required)
+## 🎯 비전
+복잡한 전 교과 시수 배정 및 교사별 시간표 중복을 알고리즘 기반으로 자동 최적화하는 **"지능형 시수 시뮬레이터"**.
 
-## 2. Key Components
-- **`App.js`:** Single-file React component containing all logic, data, and UI.
-- **`index.html`:** Entry point loading React, Babel, and Tailwind from CDN.
-- **Data Structure:** `teachers` array containing `schedules` with `grade`, `start` (class), `end` (class), and `text` (hours).
+## 📈 현재 상태 (Prototype)
+- [x] React 18 & TailwindCSS 기반의 프론트엔드 UI 초안
+- [x] Babel Standalone을 이용한 Headless 실행 구조
+- [x] 인터랙티브 시수 배정 UI 및 실시간 통계/검증 (현재/목표 시수 비교)
+- [x] 브라우저 로컬 스토리지(localStorage)를 활용한 데이터 영속성 및 Save/Load 지원
+- [ ] CDN 기반 구조를 Vite/TypeScript 기반 정식 프로젝트로 마이그레이션
+- [ ] 시수 배정 알고리즘 (백트래킹 또는 유전 알고리즘) 엔진 탑재
+- [ ] 학교별 학급 수, 주당 시간 등 조건 설정 UI 고도화
 
-## 3. Visualization Rules (Digital Scan View)
-- **Grid System:** 
-  - 1st Grade: 14 classes (2+1 units)
-  - 2nd Grade: 15 classes (4 units)
-  - 3rd Grade: 14 classes (4 units)
-- **Schedule Blocks:**
-  - Represented by colored blocks (`div`) positioned absolutely within the grid.
-  - **Width:** Percentage based on class range (`end - start + 1`).
-  - **Text:** Must show "{Subject} ({Total Hours})" (e.g., "Science A (18)").
-  - **Overlap:** Use `offsetY` to stack overlapping schedules (e.g., Cho Gyu-sang).
-- **Colors:**
-  - Science A: Blue (`bg-blue-100`)
-  - Science B: Indigo (`bg-indigo-100`)
-  - Topic Selection: Green (`bg-green-100`)
-  - Creative Activity (Cr): Orange (`bg-orange-100`)
-
-## 4. Memory & Workflow
-- **Python Environment:** Always use root `unified_venv` at `/home/rjegj/projects/unified_venv` for any backend or automation tasks.
-- **Code-First:** Always check `App.js` state before modifying data.
-- **Visual Fidelity:** Ensure the "Preview" tab matches the provided scanned document structure exactly (approvals, header, footer).
-- **Dual View:** Maintain both the "Preview" (Document) and "Data" (Dashboard) tabs.
+## 🛠️ 기술적 과제 (Roadmap)
+1. **알고리즘 구현**: 교사별 필수 수업 시수와 기피 시간을 고려한 최적 배정 로직 개발.
+2. **Excel Export**: 배정 완료된 시수표를 학교 표준 서식(Excel)으로 내보내는 기능.
